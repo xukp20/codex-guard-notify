@@ -1,0 +1,27 @@
+{
+  "name": "codex-guard-notify",
+  "version": "0.1.0",
+  "description": "Session-scoped completion guards and Lark/Feishu notifications for Codex hooks.",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Codex Guard Notify",
+    "shortDescription": "Guard long Codex tasks and notify on success.",
+    "longDescription": "Adds session-local completion guards for Codex via hooks, with structured success matching, auto-continue before stop, and optional Lark/Feishu final notifications.",
+    "developerName": "xukp20",
+    "category": "Productivity",
+    "capabilities": [
+      "Hooks",
+      "Automation",
+      "Notifications"
+    ],
+    "websiteURL": "https://github.com/xukp20/codex-guard-notify",
+    "privacyPolicyURL": "https://github.com/xukp20/codex-guard-notify",
+    "termsOfServiceURL": "https://github.com/xukp20/codex-guard-notify",
+    "defaultPrompt": [
+      "Install Codex guard hooks into my local Codex config.",
+      "Set up final-only Lark notifications for guarded sessions.",
+      "Show me how to use >guard set for a long-running task."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

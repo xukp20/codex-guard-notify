@@ -1,0 +1,10 @@
+{
+  "enabled": false,
+  "webhook_url": "https://open.feishu.cn/open-apis/bot/v2/hook/your-webhook",
+  "webhook_secret": "",
+  "title": "Codex",
+  "enabled_types": [
+    "agent-turn-complete"
+  ],
+  "max_message_chars": 2800
+}

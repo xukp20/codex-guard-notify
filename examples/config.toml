@@ -1,0 +1,4 @@
+notify = ["python3", "/ABS/PATH/TO/codex-guard-notify/scripts/lark_notify.py"]
+
+[features]
+codex_hooks = true
