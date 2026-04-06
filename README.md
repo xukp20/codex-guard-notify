@@ -27,7 +27,7 @@ It includes a plugin manifest at [`.codex-plugin/plugin.json`](./.codex-plugin/p
 ## Layout
 
 - [`scripts/guard_common.py`](./scripts/guard_common.py): shared parsing, state, and matching helpers
-- [`scripts/guard_control.py`](./scripts/guard_control.py): `UserPromptSubmit` hook for `>guard set|show|off`
+- [`scripts/guard_control.py`](./scripts/guard_control.py): `UserPromptSubmit` hook for `>guard set|show|off|reset`
 - [`scripts/guard_stop.py`](./scripts/guard_stop.py): `Stop` hook for continuation and success detection
 - [`scripts/lark_notify.py`](./scripts/lark_notify.py): Lark/Feishu webhook notifier
 - [`scripts/install.py`](./scripts/install.py): minimal installer for hooks and notify wiring
@@ -91,6 +91,7 @@ template: |
   已完成:[完成情况说明]
 regex: ^已完成:\s*(.+)$
 auto_clear: true
+auto_reset: true
 notify: true
 max_auto_continue: 20
 ```
@@ -107,12 +108,19 @@ Disable current guard:
 >guard off
 ```
 
+Reset attempts manually:
+
+```text
+>guard reset
+```
+
 Notes:
 
 - In interactive Codex TUI, prefer `>guard`.
 - `/guard` may collide with built-in slash command parsing.
 - `template` is what the model should output on success.
 - `regex` is what the hook actually matches.
+- `auto_reset: true` means a later manual user message resets `attempts` and `exhausted`.
 
 ## Success format
 
@@ -139,6 +147,8 @@ Guard state is stored under `~/.codex/guard/`:
 - `runtime/<session_id>.success.json`
 
 With `auto_clear: true`, the session guard is removed immediately after a successful match.
+
+With `auto_reset: true`, a later manual user message resets the retry counter after exhaustion. This reset is only triggered by real user input, not by the automatic continuation prompt injected by the `Stop` hook.
 
 ## Notify behavior
 

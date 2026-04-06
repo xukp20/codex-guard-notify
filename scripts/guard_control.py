@@ -13,6 +13,7 @@ from guard_common import (
     load_session_guard,
     now_iso,
     parse_guard_command,
+    reset_runtime_attempts,
     save_runtime_state,
     save_session_guard,
 )
@@ -39,6 +40,15 @@ def main() -> int:
     cleanup_old_runtime_files()
     command = parse_guard_command(prompt)
     if command is None:
+        config = load_session_guard(session_id)
+        if config and config.get("enabled", True) and config.get(
+            "auto_reset_on_user_input", True
+        ):
+            runtime = load_runtime_state(session_id)
+            reset_runtime_attempts(runtime)
+            runtime["last_turn_id"] = payload.get("turn_id")
+            runtime["last_checked_at"] = now_iso()
+            save_runtime_state(session_id, runtime)
         return 0
 
     ensure_guard_dirs()
@@ -56,6 +66,17 @@ def main() -> int:
             remove_success=True,
         )
         return _response("Guard disabled.")
+
+    if action == "reset":
+        config = load_session_guard(session_id)
+        if not config:
+            return _response("No guard is enabled for this session.")
+        runtime = load_runtime_state(session_id)
+        reset_runtime_attempts(runtime)
+        runtime["last_turn_id"] = payload.get("turn_id")
+        runtime["last_checked_at"] = now_iso()
+        save_runtime_state(session_id, runtime)
+        return _response("Guard attempts reset.")
 
     config_data = command["config"]
     guard_record = build_guard_record(session_id, cwd, config_data)
@@ -81,6 +102,7 @@ def main() -> int:
         f" template={guard_record['success_template_for_agent']}"
         f" regex={guard_record['success_regex']}"
         f" auto_clear={str(guard_record['auto_clear_on_success']).lower()}"
+        f" auto_reset={str(guard_record['auto_reset_on_user_input']).lower()}"
         f" notify={str(guard_record['notify_on_success']).lower()}"
     )
 

@@ -16,13 +16,14 @@ DEFAULT_REGEX = r"^已完成:\s*(.+)$"
 DEFAULT_MAX_AUTO_CONTINUE = 20
 MAX_AUTO_CONTINUE_LIMIT = 200
 RETENTION_SECONDS = 30 * 24 * 60 * 60
-VALID_ACTIONS = {"set", "show", "off"}
+VALID_ACTIONS = {"set", "show", "off", "reset"}
 VALID_PREFIXES = {">guard", "/guard", "@guard", "guard"}
 VALID_FIELDS = {
     "prompt",
     "template",
     "regex",
     "auto_clear",
+    "auto_reset",
     "notify",
     "max_auto_continue",
 }
@@ -176,6 +177,12 @@ def _parse_int(value: str, field_name: str) -> int:
     return parsed
 
 
+def reset_runtime_attempts(runtime: dict) -> dict:
+    runtime["attempts"] = 0
+    runtime["exhausted"] = False
+    return runtime
+
+
 def parse_guard_command(prompt_text: str) -> Optional[dict]:
     prompt = _normalize_text(prompt_text)
     if not prompt:
@@ -188,10 +195,10 @@ def parse_guard_command(prompt_text: str) -> Optional[dict]:
     if parts[0] not in VALID_PREFIXES:
         return None
     if len(parts) != 2 or parts[1] not in VALID_ACTIONS:
-        raise GuardError("Usage: >guard set, >guard show, >guard off")
+        raise GuardError("Usage: >guard set, >guard show, >guard off, >guard reset")
 
     action = parts[1]
-    if action in {"show", "off"}:
+    if action in {"show", "off", "reset"}:
         if any(line.strip() for line in lines[1:]):
             raise GuardError(f">guard {action} should not have extra content.")
         return {"action": action}
@@ -241,6 +248,9 @@ def parse_guard_command(prompt_text: str) -> Optional[dict]:
     auto_clear_on_success = _parse_bool(
         fields.get("auto_clear", "true"), "auto_clear"
     )
+    auto_reset_on_user_input = _parse_bool(
+        fields.get("auto_reset", "true"), "auto_reset"
+    )
     notify_on_success = _parse_bool(fields.get("notify", "true"), "notify")
     max_auto_continue = _parse_int(
         fields.get("max_auto_continue", str(DEFAULT_MAX_AUTO_CONTINUE)),
@@ -259,6 +269,7 @@ def parse_guard_command(prompt_text: str) -> Optional[dict]:
             "success_template_for_agent": success_template_for_agent,
             "success_regex": success_regex,
             "auto_clear_on_success": auto_clear_on_success,
+            "auto_reset_on_user_input": auto_reset_on_user_input,
             "notify_on_success": notify_on_success,
             "max_auto_continue": max_auto_continue,
         },
@@ -294,6 +305,7 @@ def guard_summary(config: Optional[dict], runtime: Optional[dict] = None) -> str
             f"template={config.get('success_template_for_agent', DEFAULT_TEMPLATE)}",
             f"regex={config.get('success_regex', DEFAULT_REGEX)}",
             f"auto_clear={str(config.get('auto_clear_on_success', True)).lower()}",
+            f"auto_reset={str(config.get('auto_reset_on_user_input', True)).lower()}",
             f"notify={str(config.get('notify_on_success', True)).lower()}",
             f"attempts={attempts}/{max_auto_continue}",
         ]
